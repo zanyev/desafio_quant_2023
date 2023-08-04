@@ -2,7 +2,7 @@
 
 <ol>
 <li><h3>Baixar o Data Set</h3>
-<ul> Ativos utilizados - intervalos /1d/4h//1h/
+<ul> Ativos utilizados - intervalos /1d/4h//1h/ -> pasta assets
   <li>BTCUSDT</li>
   <li>ETHUSDT</li>
   <li>BNBUSDT</li>
