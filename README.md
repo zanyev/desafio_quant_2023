@@ -13,4 +13,5 @@
 </li>
 <li><h3>Criar Funções para o Cálculo dos Indicadores</h3>
 
+<li><h3>Implementar DDPG ator de retorno com 1 indicador</h3>
 </ol>
