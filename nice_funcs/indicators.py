@@ -15,3 +15,15 @@ def EWMA(s:pd.Series,window:int)->pd.Series:
     return ewma
 
 
+def Normalize(s:pd.Series)->pd.Series:
+    """
+    Normaliza atraves do calculo do z da normal
+    atributos:
+    s:serie de preços
+    return: serie de precos normalizada
+    """
+    normalized = (s - s.mean())/s.std()
+
+    return normalized
+
+
