@@ -1,5 +1,7 @@
 import pandas as pd
 
+from indicators import EWMA
+
 
 def MACD(s:pd.Series)-> [pd.Series, pd.Series, pd.Series]:
     """Recebendo a série de fechamento da ação, retorna 
