@@ -78,8 +78,9 @@ class Agent:
         if not evaluate:
             actions += tf.random.normal(shape=[self.n_actions],mean=0.0, stddev=self.noise)
 
-        actions = actions/sum(actions)
-        actions = tf.clip_by_value(actions, self.min_action, self.max_action)
+        #actions = actions/sum(actions)
+        # ATENCAO MUDAR O ACTIVATION PARA SOFTMAX
+        actions = tf.clip_by_value(actions, self.min_action, self.max_action).numpy()
 
         return actions[0]
     
@@ -117,7 +118,7 @@ class Agent:
         
         actor_network_gradient = tape.gradient(actor_loss,
                                                self.actor.trainable_variables)
-        self.actor.optimizer.apply(zip(
+        self.actor.optimizer.apply_gradients(zip(
             actor_network_gradient, self.actor.trainable_variables
         ))
 

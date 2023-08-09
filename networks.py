@@ -44,7 +44,7 @@ class ActorNetwork(keras.Model):
 
     self.fc1 = Dense(self.fc1_dims, activation = 'relu')
     self.fc2 = Dense(self.fc2_dims, activation = 'relu')
-    self.mu = Dense(self.n_actions, activation = 'softmax') #acao é a distribuicao do ptfl
+    self.mu = Dense(self.n_actions, activation = 'tanh') #acao é a distribuicao do ptfl
 
   def call(self, state):
     prob = self.fc1(state)

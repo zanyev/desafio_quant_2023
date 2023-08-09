@@ -12,6 +12,9 @@
 </ul>
 </li>
 <li><h3>Criar Funções para o Cálculo dos Indicadores</h3>
-
-<li><h3>Implementar DDPG ator de retorno com 1 indicador</h3>
+<li><h3>Criar o Ambiente Customizado Gymnasium para testar o modelo</h3>
+<li><h3>Implementar DDPG ator de retorno</h3>
+<li><h3>Implementar GA com o ator de retorno</h3>
+<li><h3>Implementar MADDDPG com todos os atores</h3>
+<li><h3>Implementar GA com todos os atores</h3>
 </ol>
