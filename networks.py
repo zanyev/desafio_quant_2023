@@ -10,7 +10,6 @@ class CriticNetwork(keras.Model):
     super(CriticNetwork, self).__init__()
     self.fc1_dims = fc1_dims
     self.fc2_dims = fc2_dims
-
     self.model_name = name
     self.checkpoint_dir = chkpt_dir
     self.checkpoint_file = os.path.join(self.checkpoint_dir,\
@@ -24,8 +23,9 @@ class CriticNetwork(keras.Model):
     """foward propagation operation"""
     action_value = self.fc1(tf.concat([state,action],axis=1))
     action_value = self.fc2(action_value)
-
     q = self.q(action_value)
+
+    return q
 
 
 class ActorNetwork(keras.Model):
@@ -44,12 +44,12 @@ class ActorNetwork(keras.Model):
 
     self.fc1 = Dense(self.fc1_dims, activation = 'relu')
     self.fc2 = Dense(self.fc2_dims, activation = 'relu')
-    self.mu = Dense(self.n_actions, activation = 'softmax')
+    self.mu = Dense(self.n_actions, activation = 'softmax') #acao é a distribuicao do ptfl
 
-    def call(self, state):
-      prob = self.fc1(state)
-      prob = self.fc2(prob)
-      # if action vouns not +- 1, can multiply here
-      mu = self.mu(prob)
+  def call(self, state):
+    prob = self.fc1(state)
+    prob = self.fc2(prob)
+    # if action vouns not +- 1, can multiply here
+    mu = self.mu(prob)
 
     return mu

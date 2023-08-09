@@ -29,7 +29,7 @@ class Agent:
         self.critic.compile(optimizer = Adam(learning_rate = beta))
 
         self.target_actor.compile(optimizer = Adam(learning_rate = alpha))
-        self.target_critic.compile(optimizer = Adam(learning_rate = alpha))
+        self.target_critic.compile(optimizer = Adam(learning_rate = beta))
 
         self.update_network_parameters(tau=1)
 
@@ -37,18 +37,18 @@ class Agent:
         if tau is None:
             tau = self.tau
         weights = []
-        target_actor_weights = self.target_actor_weights
+        targets = self.target_actor.weights
 
         for i, weight in enumerate(self.actor.weights):
-            weights.append(weight*tau + target_actor_weights[i]*(1-tau))
+            weights.append(weight*tau + targets[i]*(1-tau))
         self.target_actor.set_weights(weights)
 
 
         weights = []
-        target_critic_weights = self.target_critic_weights
+        targets = self.target_critic.weights
 
         for i, weight in enumerate(self.critic.weights):
-            weights.append(weight*tau + target_critic_weights[i]*(1-tau))
+            weights.append(weight*tau + targets[i]*(1-tau))
         self.target_critic.set_weights(weights)
     
     def remember(self, state, action, reward, new_state, done):
@@ -76,12 +76,58 @@ class Agent:
         actions = self.actor(state)
 
         if not evaluate:
-            actions += tf.random.normal(shape=[self.n_actions],mean=0, stddev=self.noise)
+            actions += tf.random.normal(shape=[self.n_actions],mean=0.0, stddev=self.noise)
 
+        actions = actions/sum(actions)
         actions = tf.clip_by_value(actions, self.min_action, self.max_action)
 
         return actions[0]
     
     def learn(self):
-        pass
+        if self.memory.mem_cntr < self.batch_size:
+            return
+        state, action, reward, new_state, done = \
+                self.memory.sample_buffer(self.batch_size)
+        
+        states = tf.convert_to_tensor(state, dtype=tf.float32)
+        states_ = tf.convert_to_tensor(new_state, dtype=tf.float32)
+        actions = tf.convert_to_tensor(action, dtype=tf.float32)
+        rewards = tf.convert_to_tensor(reward, dtype=tf.float32)
+
+        with tf.GradientTape() as tape:
+            target_actions = self.target_actor(states_)
+            critic_value_ = tf.squeeze(self.target_critic
+                                       (states_, target_actions),1)
+            critic_value = tf.squeeze(self.critic
+                                      (states,actions),1)
+            
+            target = rewards + self.gamma*critic_value_*(1-done) ###### atenção#### reward antes
+            critic_loss = keras.losses.MSE(target, critic_value)
+        
+        critic_network_gradient = tape.gradient(critic_loss,self.critic.trainable_variables)
+
+        self.critic.optimizer.apply_gradients(zip(
+            critic_network_gradient, self.critic.trainable_variables
+        ))
+
+        with tf.GradientTape() as tape:
+            new_policy_actions = self.actor(states)
+            actor_loss = -self.critic(states, new_policy_actions)
+            actor_loss = tf.math.reduce_mean(actor_loss)
+        
+        actor_network_gradient = tape.gradient(actor_loss,
+                                               self.actor.trainable_variables)
+        self.actor.optimizer.apply(zip(
+            actor_network_gradient, self.actor.trainable_variables
+        ))
+
+        self.update_network_parameters()
+        
+
+
+
+
+            
+
+
         
