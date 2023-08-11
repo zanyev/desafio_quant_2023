@@ -26,6 +26,20 @@ def Normalize(s:pd.Series)->pd.Series:
 
     return normalized
 
+def NormalizeWindow(s:pd.Series,window=20)->pd.Series:
+    """
+    Normaliza atraves do calculo do z da normal
+    atributos:
+    s:serie de preços
+    return: serie de precos normalizada
+    """
+    media = s.rolling(window=window).mean()
+    desvio = s.rolling(window=window).std()
+
+    normalized = s.subtract(media).divide(desvio)
+
+    return normalized
+
 
 def CreateRandomPrtf(n):   
     """Gera um array de tamanho n+1, onde suas entradas somam 1.
@@ -33,7 +47,7 @@ def CreateRandomPrtf(n):
     int -> array"""
 
     aleatorio = [0]
-    for _ in range(0, n):
+    for _ in range(0, n-1):
         aleatorioi = np.random.rand()   # Gero números entre [0, 1) uniformemente
         aleatorio.append(aleatorioi)    # Os adiciono a lista.
 
