@@ -60,6 +60,7 @@ def CreateRandomPrtf(n):
 
 
 
+
 def MACD(s:pd.Series, media_longa = 26, media_curta = 12)-> [pd.Series, pd.Series, pd.Series]:
     """Recebendo a série de fechamento da ação, retorna 
     MACD = EWMA_12 - EWMA_26
