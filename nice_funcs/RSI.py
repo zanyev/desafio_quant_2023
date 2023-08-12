@@ -1,5 +1,5 @@
 import pandas as pd
-
+import numpy as np
 
 def RSI(s:pd.Series, window:int=14)->pd.Series:
     """Recebendo a série de fechamento da ação, retorna

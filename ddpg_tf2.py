@@ -73,16 +73,17 @@ class Agent:
 
     def choose_action(self, observation, evaluate=False):
         state = tf.convert_to_tensor([observation],dtype=tf.float32)
-        actions = self.actor(state)
-
+        actions = self.actor(state).numpy()
+    
         if not evaluate:
-            actions += tf.random.normal(shape=[self.n_actions],mean=0.0, stddev=self.noise)
+            actions += tf.random.normal(shape=actions.shape,mean=0.0, stddev=self.noise)
+        actions = tf.clip_by_value(actions,clip_value_min=self.min_action,clip_value_max=self.max_action)
 
+
+        res = res/sum(res)
         #actions = actions/sum(actions)
         # ATENCAO MUDAR O ACTIVATION PARA SOFTMAX
-        actions = tf.clip_by_value(actions, self.min_action, self.max_action).numpy()
-
-        return actions[0]
+        return res
     
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:
@@ -95,12 +96,15 @@ class Agent:
         actions = tf.convert_to_tensor(action, dtype=tf.float32)
         rewards = tf.convert_to_tensor(reward, dtype=tf.float32)
 
+        
+
         with tf.GradientTape() as tape:
             target_actions = self.target_actor(states_)
-            critic_value_ = tf.squeeze(self.target_critic
-                                       (states_, target_actions),1)
-            critic_value = tf.squeeze(self.critic
-                                      (states,actions),1)
+            print(states_.shape,target_actions.shape)
+            
+            critic_value_ = tf.squeeze(self.target_critic(states_, target_actions))
+            
+            critic_value = tf.squeeze(self.critic(states,actions))
             
             target = rewards + self.gamma*critic_value_*(1-done) ###### atenção#### reward antes
             critic_loss = keras.losses.MSE(target, critic_value)
