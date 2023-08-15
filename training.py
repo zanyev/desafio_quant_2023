@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import os
 from nice_funcs.indicators import CreateRandomPrtf,EWMA,MACD,RSI,NormalizeWindow
-from stable_baselines3 import DDPG ,PPO, TD3 ,A2C 
+from stable_baselines3 import DDPG ,PPO
 from ambiente import TradingEnv
+from stable_baselines3.common.noise import NormalActionNoise
 
 
     
@@ -48,14 +49,15 @@ df_fechamento,normalized_fech,macd,rsi,ewma_diff =  GetIndex(df_fechamento,norma
 
 
 env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
+action_noise = NormalActionNoise(mean=np.zeros(len(df_fechamento.columns)), sigma=0.1 * np.ones(len(df_fechamento.columns)))
 
-# %
 
 save_path = os.path.join('Training', 'Saved Models')
 log_path = os.path.join('Training', 'Logs')
 
 env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
-model = DDPG("MlpPolicy", env, verbose = 1)
+
+model = DDPG("MlpPolicy", env, verbose = 1,action_noise=action_noise)
 model.learn(total_timesteps=1_000_000,progress_bar=True)
 
 model.save('./Training/Saved Models/trading.zip')

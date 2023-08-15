@@ -56,4 +56,4 @@ class ActorNetwork(keras.Model):
     return mu
   
 
-  ### 
+  ### [indicadores x ativos] -> [nativos]

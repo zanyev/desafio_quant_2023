@@ -30,10 +30,9 @@ class TradingEnv(Env):
 
       self.observation_space = Box(low=-np.inf,
                                    high=np.inf,
-                                   shape=(self.n_indicadores, self.n_ativos),
+                                   shape=(self.n_indicadores * self.n_ativos,),
                                    dtype='float32')
-      # 
-
+ 
     def CreateObs(self):
       arr = []
       idx_ = self.idx_
@@ -41,6 +40,7 @@ class TradingEnv(Env):
       for ind in self.indicadores:
         arr.append(ind.iloc[idx_].values)
       arr = np.array(arr,dtype='float32')
+      arr = arr.flatten()
 
       #obs = dict(zip(self.nome_ativos,arr.T))
       return arr
@@ -58,7 +58,7 @@ class TradingEnv(Env):
       precos = self.fechamento.iloc[self.idx_]
       self.step_ += 1
       self.idx_ +=1
-      
+
       action = self.softmax_normalization(action)
       #print(action)
   
@@ -72,7 +72,7 @@ class TradingEnv(Env):
 
       condicao_1 = (self.dinheiro_final/self.dinheiro_inicial)
       condicao_2 = self.step_ >= self.max_steps
-      print(action)
+     
 
 
       if condicao_1 <= 0.1: # caiu 90% = done
