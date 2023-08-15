@@ -60,7 +60,7 @@ class TradingEnv(Env):
       self.idx_ +=1
 
       action = self.softmax_normalization(action)
-      #print(action)
+      
   
       new_precos = self.fechamento.iloc[self.idx_]
       reward = self.RewardFunc(precos,new_precos,action)
@@ -87,7 +87,7 @@ class TradingEnv(Env):
 
     def reset(self,seed=0):
       print('*'*50)
-      print('Retorno',(self.dinheiro_final/self.dinheiro_inicial) -1)
+      print('Retorno',round(self.dinheiro_final,2))
 
       self.step_ = 0
       self.idx_ = 0

@@ -57,10 +57,16 @@ log_path = os.path.join('Training', 'Logs')
 
 env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
 
-model = DDPG("MlpPolicy", env, verbose = 1,action_noise=action_noise)
-model.learn(total_timesteps=1_000_000,progress_bar=True)
+model = PPO("MlpPolicy",
+            env,
+            verbose = 1,
+            train_freq=4,
+            learning_rate=0.001,
+            batch_size=128)
 
-model.save('./Training/Saved Models/trading.zip')
+model.learn(total_timesteps=2_000_000,progress_bar=True)
+
+model.save('./Training/Saved Models/trading_2.zip')
 
 
 
