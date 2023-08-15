@@ -59,7 +59,12 @@ class TradingEnv(Env):
       self.step_ += 1
       self.idx_ +=1
 
-      action = self.softmax_normalization(action)
+      if sum(action) != 0:
+        action = action/sum(action)
+      else:
+        action = self.softmax_normalization(action)
+
+    
       
   
       new_precos = self.fechamento.iloc[self.idx_]
