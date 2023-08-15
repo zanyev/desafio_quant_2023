@@ -18,6 +18,7 @@ def GetIndex(*args):
   idx_date = min(index_init)
   new_index_indicators = []
   for ind_ in indicators:
+    ind_['Cash'] = 0 
     new_index_indicators.append(ind_[idx_date:])
   return new_index_indicators
         
@@ -43,7 +44,6 @@ normalized_fech = df_fechamento.apply(lambda row: NormalizeWindow(row)).dropna()
 macd = normalized_fech.apply(lambda row: MACD(row)[0]).dropna()
 rsi = normalized_fech.apply(lambda row: RSI(row)).dropna()
 ewma_diff = normalized_fech.apply(lambda row: EWMA(row,20) - EWMA(row,5)).dropna()
-
 df_fechamento,normalized_fech,macd,rsi,ewma_diff =  GetIndex(df_fechamento,normalized_fech, macd, rsi, ewma_diff)
 
 
@@ -51,18 +51,15 @@ env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
 
 # %
 
-# %%
 save_path = os.path.join('Training', 'Saved Models')
 log_path = os.path.join('Training', 'Logs')
 
 env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
-model = A2C("MlpPolicy", env, verbose = 1)
+model = DDPG("MlpPolicy", env, verbose = 1)
 model.learn(total_timesteps=1_000_000,progress_bar=True)
 
 model.save('./Training/Saved Models/trading.zip')
 
-
-# %%
 
 
 

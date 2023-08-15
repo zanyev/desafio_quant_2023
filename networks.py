@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense
 import os
 
 class CriticNetwork(keras.Model):
-  def __init__(self, fc1_dims = 512, fc2_dims = 512,\
+  def __init__(self, fc1_dims = 64, fc2_dims = 64,\
     name= 'critic', chkpt_dir = 'tmp/ddpg'):
 
     super(CriticNetwork, self).__init__()
@@ -29,7 +29,7 @@ class CriticNetwork(keras.Model):
 
 
 class ActorNetwork(keras.Model):
-  def __init__(self, n_actions, fc1_dims = 512, fc2_dims = 512,\
+  def __init__(self, n_actions, fc1_dims = 64, fc2_dims = 64,\
     name= 'actor', chkpt_dir = 'tmp/ddpg'):
 
     super(ActorNetwork, self).__init__()
@@ -44,12 +44,16 @@ class ActorNetwork(keras.Model):
 
     self.fc1 = Dense(self.fc1_dims, activation = 'relu')
     self.fc2 = Dense(self.fc2_dims, activation = 'relu')
-    self.mu = Dense(self.n_actions, activation = 'tanh') #acao é a distribuicao do ptfl
+    self.mu = Dense(self.n_actions, activation = 'softmax') #acao é a distribuicao do ptfl
 
   def call(self, state):
     prob = self.fc1(state)
     prob = self.fc2(prob)
     # if action vouns not +- 1, can multiply here
+    ###
     mu = self.mu(prob)
 
     return mu
+  
+
+  ### 
