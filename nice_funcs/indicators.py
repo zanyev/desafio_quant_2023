@@ -99,6 +99,19 @@ def RSI(s:pd.Series, window:int=14)->pd.Series:
     s['rs'] = s['avg_gain']/s['avg_loss']
     s['rsi'] = 100 - 100/(1 + s['rs'])
 
-    sri_vector = np.array(s['rsi'])
+    rsi_vector = np.array(s['rsi'])
 
-    return sri_vector
+    return rsi_vector
+
+
+def MDD(s:pd.Series, window = 252)->pd.Series:
+    """Recebendo a série do close da ação, retorna o maximum drawmdown
+    Pretendo calcular o MDD assim:
+    Daily_DD = value_today/max_value_window - 1
+    MDD = Daily_DD.min()"""
+
+    Max_value = s.rolling(window = window, min_periods=1).max()
+    Daily_DD = s/Max_value - 1
+    MDD = Daily_DD.min()
+
+    return Daily_DD, MDD

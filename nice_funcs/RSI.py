@@ -25,6 +25,6 @@ def RSI(s:pd.Series, window:int=14)->pd.Series:
     s['rs'] = s['avg_gain']/s['avg_loss']
     s['rsi'] = 100 - 100/(1 + s['rs'])
 
-    sri_vector = np.array(s['rsi'])
+    rsi_vector = np.array(s['rsi'])
 
-    return sri_vector
+    return rsi_vector
