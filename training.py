@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import os
-from nice_funcs.indicators import CreateRandomPrtf,EWMA,MACD,RSI,NormalizeWindow
+from nice_funcs.indicators import CreateRandomPrtf,EWMA,MACD,RSI,NormalizeWindow,MDD
 from stable_baselines3 import DDPG ,PPO
 from ambiente import TradingEnv
 from stable_baselines3.common.noise import NormalActionNoise
@@ -42,15 +42,20 @@ for k in ativosOHLC.keys():
 
 
 df_fechamento = pd.DataFrame(close_prices).iloc[:-360]
+
 normalized_fech = df_fechamento.apply(lambda row: NormalizeWindow(row)).dropna()
 macd = df_fechamento.apply(lambda row: MACD(row)[0]).dropna()
 rsi = df_fechamento.apply(lambda row: RSI(row)).dropna()
 ewma_diff = df_fechamento.apply(lambda row: EWMA(row,20) - EWMA(row,5)).dropna()
-df_fechamento,normalized_fech,macd,rsi,ewma_diff =  GetIndex(df_fechamento,normalized_fech, macd, rsi, ewma_diff)
+ddd = df_fechamento.apply(lambda row: MDD(row,window=26)[0]).dropna()
+mdd = df_fechamento.apply(lambda row: MDD(row,window=26)[0]).rolling(window=26).min().dropna()
+df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamento,normalized_fech, macd, rsi, ewma_diff,ddd,mdd)
 
+
+for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
+  print(len(val))
 
 env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
-action_noise = NormalActionNoise(mean=np.zeros(len(df_fechamento.columns)), sigma=0.1 * np.ones(len(df_fechamento.columns)))
 
 
 save_path = os.path.join('Training', 'Saved Models')
@@ -59,7 +64,6 @@ eval_callback = EvalCallback(env, best_model_save_path=log_path,
                              log_path=log_path, eval_freq=10_000,
                              deterministic=False, render=False)
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
 
 model = PPO("MlpPolicy",
             env,
@@ -67,9 +71,9 @@ model = PPO("MlpPolicy",
             verbose=1,
             tensorboard_log="./Training/Logs/tensor_board_logs")
 
-model.learn(total_timesteps=2_000_000,progress_bar=True,callback=eval_callback)
+model.learn(total_timesteps=5_000_000,progress_bar=True,callback=eval_callback)
 
-model.save('./Training/Saved Models/trading_2.zip')
+model.save('./Training/Saved Models/trading_4.zip')
 
 
 
