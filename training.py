@@ -55,13 +55,13 @@ df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamen
 for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
   print(len(val))
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
+env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd])
 
 
 save_path = os.path.join('Training', 'Saved Models')
 log_path = os.path.join('Training', 'Logs')
 eval_callback = EvalCallback(env, best_model_save_path=log_path,
-                             log_path=log_path, eval_freq=10_000,
+                             log_path=log_path,
                              deterministic=False, render=False)
 
 
@@ -71,9 +71,9 @@ model = PPO("MlpPolicy",
             verbose=1,
             tensorboard_log="./Training/Logs/tensor_board_logs")
 
-model.learn(total_timesteps=5_000_000,progress_bar=True,callback=eval_callback)
+model.learn(total_timesteps=2_000_000,progress_bar=True,callback=eval_callback)
 
-model.save('./Training/Saved Models/trading_4.zip')
+model.save('./Training/Saved Models/trading_5.zip')
 
 
 
