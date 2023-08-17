@@ -21,9 +21,18 @@ class TradingEnv(Env):
       self.truncated = False
       self.max_steps = len(self.fechamento) -1
 
-      self.action_space = Box(low=0,high=1,shape=(self.n_actions,),dtype='float32')
-      self.observation_space = Box(low=-np.inf,high=np.inf,shape=(4, 7),dtype='float32')
+      self.action_space = Box(low=0,
+                              high=1,
+                              shape=(self.n_actions,),
+                              dtype='float32')
+      
+      # [0,0.2,0.2...] 
 
+      self.observation_space = Box(low=-np.inf,
+                                   high=np.inf,
+                                   shape=(self.n_indicadores * self.n_ativos,),
+                                   dtype='float32')
+ 
     def CreateObs(self):
       arr = []
       idx_ = self.idx_
@@ -31,30 +40,36 @@ class TradingEnv(Env):
       for ind in self.indicadores:
         arr.append(ind.iloc[idx_].values)
       arr = np.array(arr,dtype='float32')
+      arr = arr.flatten()
 
       #obs = dict(zip(self.nome_ativos,arr.T))
       return arr
 
     def RewardFunc(self,precos,new_precos,action):
-
       portfolio_return = sum(((new_precos[:-1] - precos[:-1])/precos[:-1]) * action[:-1])
       reward = portfolio_return*self.dinheiro_final
 
-      
       return reward
 
     def step(self,action):
       info = {}
+      
       obs = self.CreateObs()
       precos = self.fechamento.iloc[self.idx_]
-
       self.step_ += 1
       self.idx_ +=1
 
+      if sum(action) != 0:
+        action = action/sum(action)
+      else:
+        action = self.softmax_normalization(action)
+
+    
+      
   
       new_precos = self.fechamento.iloc[self.idx_]
-
       reward = self.RewardFunc(precos,new_precos,action)
+  
 
       
 
@@ -62,6 +77,7 @@ class TradingEnv(Env):
 
       condicao_1 = (self.dinheiro_final/self.dinheiro_inicial)
       condicao_2 = self.step_ >= self.max_steps
+     
 
 
       if condicao_1 <= 0.1: # caiu 90% = done
@@ -76,7 +92,7 @@ class TradingEnv(Env):
 
     def reset(self,seed=0):
       print('*'*50)
-      print('Retorno',(self.dinheiro_final/self.dinheiro_inicial) -1)
+      print('Retorno',round(self.dinheiro_final,2))
 
       self.step_ = 0
       self.idx_ = 0

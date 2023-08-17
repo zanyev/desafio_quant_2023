@@ -2,9 +2,11 @@
 import pandas as pd
 import numpy as np
 import os
-from nice_funcs.indicators import CreateRandomPrtf,EWMA,MACD,RSI,NormalizeWindow
-from stable_baselines3 import DDPG ,PPO, TD3 ,A2C 
+from nice_funcs.indicators import CreateRandomPrtf,EWMA,MACD,RSI,NormalizeWindow,MDD
+from stable_baselines3 import DDPG ,PPO
 from ambiente import TradingEnv
+from stable_baselines3.common.noise import NormalActionNoise
+from stable_baselines3.common.callbacks import EvalCallback
 
 
     
@@ -18,6 +20,7 @@ def GetIndex(*args):
   idx_date = min(index_init)
   new_index_indicators = []
   for ind_ in indicators:
+    ind_['Cash'] = 0 
     new_index_indicators.append(ind_[idx_date:])
   return new_index_indicators
         
@@ -39,30 +42,39 @@ for k in ativosOHLC.keys():
 
 
 df_fechamento = pd.DataFrame(close_prices).iloc[:-360]
+
 normalized_fech = df_fechamento.apply(lambda row: NormalizeWindow(row)).dropna()
-macd = normalized_fech.apply(lambda row: MACD(row)[0]).dropna()
-rsi = normalized_fech.apply(lambda row: RSI(row)).dropna()
-ewma_diff = normalized_fech.apply(lambda row: EWMA(row,20) - EWMA(row,5)).dropna()
+macd = df_fechamento.apply(lambda row: MACD(row)[0]).dropna()
+rsi = df_fechamento.apply(lambda row: RSI(row)).dropna()
+ewma_diff = df_fechamento.apply(lambda row: EWMA(row,20) - EWMA(row,5)).dropna()
+ddd = df_fechamento.apply(lambda row: MDD(row,window=26)[0]).dropna()
+mdd = df_fechamento.apply(lambda row: MDD(row,window=26)[0]).rolling(window=26).min().dropna()
+df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamento,normalized_fech, macd, rsi, ewma_diff,ddd,mdd)
 
-df_fechamento,normalized_fech,macd,rsi,ewma_diff =  GetIndex(df_fechamento,normalized_fech, macd, rsi, ewma_diff)
+
+for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
+  print(len(val))
+
+env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd])
 
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
-
-# %
-
-# %%
 save_path = os.path.join('Training', 'Saved Models')
 log_path = os.path.join('Training', 'Logs')
-
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff])
-model = A2C("MlpPolicy", env, verbose = 1)
-model.learn(total_timesteps=1_000_000,progress_bar=True)
-
-model.save('./Training/Saved Models/trading.zip')
+eval_callback = EvalCallback(env, best_model_save_path=log_path,
+                             log_path=log_path,
+                             deterministic=False, render=False)
 
 
-# %%
+model = PPO("MlpPolicy",
+            env,
+            batch_size=128,
+            verbose=1,
+            tensorboard_log="./Training/Logs/tensor_board_logs")
+
+model.learn(total_timesteps=2_000_000,progress_bar=True,callback=eval_callback)
+
+model.save('./Training/Saved Models/trading_5.zip')
+
 
 
 
