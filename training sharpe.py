@@ -58,7 +58,7 @@ df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamen
 for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
   print(len(val))
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd],risk_free_rate,'r')
+env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd],risk_free_rate,'s')
 
 
 save_path = os.path.join('Training', 'Saved Models')
@@ -76,7 +76,7 @@ model = PPO("MlpPolicy",
 
 model.learn(total_timesteps=2_000_000,progress_bar=True,callback=eval_callback)
 
-model.save('./Training/Saved Models/trading_6.zip')
+model.save('./Training/Saved Models/trading_sharpe_1.zip')
 
 
 

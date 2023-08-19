@@ -2,17 +2,15 @@ import pandas as pd
 import numpy as np
 
 
-def SharpeRatio(retorno:pd.Series, window=365)->pd.Series:
+
+def SharpeRatio(retorno:pd.Series,risk_free_rate:float, window=20)->pd.Series:
     """Recebendo a série que contém os retornos da carteira, retorna o índice Sharpe dela.
     sharpe = (Retorno - RiskFree)/std(Retorno)"""
     
-    std_retorno = retorno.std()
+    mean_returns = retorno.rolling(window=window).mean()
+    mean_std = retorno.rolling(window=window).std()
+
+    sharpe = (mean_returns-risk_free_rate)/mean_std
 
     # Vamos calcular o retorno do bond de 10 anos dos EUA. 08/08/2018 até 08/08/2023
-    path='../assets/United States 10-Year Bond Yield Historical Data.csv'
-    close_price_free=pd.read_csv(path)['Close']
-    retorno_riskfree = (close_price_free[1:] - close_price_free[:-1]) / close_price_free[:-1]
-
-    indice_sharpe = (np.mean(retorno) - np.mean(retorno_riskfree))/std_retorno
-
-    return indice_sharpe
+    return sharpe
