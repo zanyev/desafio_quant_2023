@@ -74,7 +74,7 @@ model = PPO("MlpPolicy",
             verbose=1,
             tensorboard_log="./Training/Logs/tensor_board_logs")
 
-model.learn(total_timesteps=10_000_000,progress_bar=True,callback=eval_callback)
+model.learn(total_timesteps=1_500_000,progress_bar=True,callback=eval_callback)
 
 model.save('./Training/Saved Models/trading_sharpe_3.zip')
 
