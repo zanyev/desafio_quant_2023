@@ -30,7 +30,7 @@ file = './assets/United States 10-Year Bond Yield Historical Data.csv'
 
 close_price_free = pd.read_csv(file).Price
 risk_free_rate = close_price_free.mean()/100
-daily_risk_free = (1+risk_free_rate)**1/252
+daily_risk_free = (risk_free_rate+1)**(1/360) -1
 
 ativos = os.listdir(path_diario)
 ativosOHLC = {}
@@ -58,7 +58,7 @@ df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamen
 for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
   print(len(val))
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd],risk_free_rate,'s')
+env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff],daily_risk_free,'s')
 
 
 save_path = os.path.join('Training', 'Saved Models')
@@ -74,9 +74,9 @@ model = PPO("MlpPolicy",
             verbose=1,
             tensorboard_log="./Training/Logs/tensor_board_logs")
 
-model.learn(total_timesteps=2_000_000,progress_bar=True,callback=eval_callback)
+model.learn(total_timesteps=10_000_000,progress_bar=True,callback=eval_callback)
 
-model.save('./Training/Saved Models/trading_sharpe_1.zip')
+model.save('./Training/Saved Models/trading_sharpe_3.zip')
 
 
 
