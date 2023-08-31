@@ -9,6 +9,7 @@ from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.callbacks import EvalCallback
 
 
+periodo_permitido = ('2009-12-30','2022-12-30')
     
 
 def GetIndex(*args):
@@ -20,7 +21,7 @@ def GetIndex(*args):
   idx_date = min(index_init)
   new_index_indicators = []
   for ind_ in indicators:
-    ind_['Cash'] = 0 
+    #ind_['Cash'] = 0 
     new_index_indicators.append(ind_[idx_date:])
   return new_index_indicators
         
@@ -30,7 +31,7 @@ file = './assets/United States 10-Year Bond Yield Historical Data.csv'
 
 close_price_free = pd.read_csv(file).Price
 risk_free_rate = close_price_free.mean()/100
-daily_risk_free = (1+risk_free_rate)**1/252
+daily_risk_free = (risk_free_rate+1)**(1/252) -1
 
 ativos = os.listdir(path_diario)
 ativosOHLC = {}
@@ -58,7 +59,7 @@ df_fechamento,normalized_fech,macd,rsi,ewma_diff,ddd,mdd =  GetIndex(df_fechamen
 for val in [df_fechamento,*[normalized_fech,macd,rsi,ewma_diff,ddd,mdd]]:
   print(len(val))
 
-env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd],risk_free_rate,'r')
+env = TradingEnv(df_fechamento,[normalized_fech,macd,rsi,ewma_diff,ddd,mdd],daily_risk_free,'r')
 
 
 save_path = os.path.join('Training', 'Saved Models')

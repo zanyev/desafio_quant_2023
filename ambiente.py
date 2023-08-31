@@ -6,7 +6,7 @@ import pandas as pd
 from nice_funcs.indicators import SharpeRatio
 
 class TradingEnv(Env):
-    def __init__(self,fechamento,indicadores:list,risk_free_rate:float,objetive:str)->None:
+    def __init__(self,fechamento,indicadores:list,risk_free_rate:float,objetive:str,long_only:bool)->None:
       super().__init__()
       self.fechamento = fechamento
       self.idx_ = 0
@@ -25,14 +25,18 @@ class TradingEnv(Env):
       self._step_portfolio = [self.dinheiro_inicial]
       self.objetive = objetive
 
+      if long_only:
+        self.action_space = Box(low=0,
+                                high=1,
+                                shape=(self.n_actions,),
+                                dtype='float32')
+      else:
+        self.action_space = Box(low=-1,
+                                high=1,
+                                shape=(self.n_actions,),
+                                dtype='float32')
 
-      self.action_space = Box(low=0,
-                              high=1,
-                              shape=(self.n_actions,),
-                              dtype='float32')
       
-      # [0,0.2,0.2...] 
-
       self.observation_space = Box(low=-np.inf,
                                    high=np.inf,
                                    shape=(self.n_indicadores * self.n_ativos,),
@@ -46,39 +50,42 @@ class TradingEnv(Env):
         arr.append(ind.iloc[idx_].values)
       arr = np.array(arr,dtype='float32')
       arr = arr.flatten()
-
-      #obs = dict(zip(self.nome_ativos,arr.T))
       return arr
+  
 
-    def RewardFunc(self,precos,new_precos,action):
-      portfolio_return = sum(((new_precos[:-1] - precos[:-1])/precos[:-1]) * action[:-1])
+    def PNL(self,precos,new_precos,action):
+      portfolio_return = sum(((new_precos - precos)/precos) * action)
       reward = portfolio_return*self.dinheiro_final
       return reward
     
-    def RewardFunc2(self):
-      sharpe = self.CalculatePrtfReturns()
+    def MovingSharpe(self):
+      returns = self.CalculatePrtfReturns()
+      sharpe = SharpeRatio(returns,self.risk_free_rate).fillna(0)
       return sharpe.iloc[-1]
 
     def step(self,action):
+      action = self.NormalizeAction(action)
       info = {}
       obs = self.CreateObs()
+    
       precos = self.fechamento.iloc[self.idx_]
       self.step_ += 1
       self.idx_ +=1
       new_precos = self.fechamento.iloc[self.idx_]
 
 
-      action = self.NormalizeAction(action)
-      valor = self.RewardFunc(precos,new_precos,action)
+      
+      pnl = self.PNL(precos,new_precos,action)
+  
       
 
-      self.dinheiro_final += valor
+      self.dinheiro_final += pnl
       self._step_portfolio.append(self.dinheiro_final)
 
       if self.objetive  == 'r':
-        reward = valor
+        reward = pnl
       elif self.objetive == 's':
-        reward = self.RewardFunc2()
+        reward = self.MovingSharpe()
       else:
         raise(TypeError)
       
@@ -113,36 +120,24 @@ class TradingEnv(Env):
 
       return obs, {}
     
-    def softmax_normalization(self, actions):
-        numerator = np.exp(actions)
-        denominator = np.sum(np.exp(actions))
-        softmax_output = numerator/denominator
-        return softmax_output
-
-
-    def Define_Observation(self):
-      space = {}
-      for ativo_name in self.nome_ativos:
-        space[ativo_name] = Box(low=-np.inf,high=np.inf,shape = (len(self.indicadores),))
-      
-      return Dict(space)
     
     def NormalizeAction(self, action):
-      if sum(action) != 0:
-        action = action/sum(action)
+      if all(action) == 0:
+        action = 1/len(action)
       else:
-        action = self.softmax_normalization(action)
+        action = action/sum(np.abs(action))
       return action
 
 
     def CalculatePrtfReturns(self):
       returns = pd.Series(self._step_portfolio).pct_change()[1:]
 
-      sharpe_series = SharpeRatio(returns,self.risk_free_rate).fillna(0)
-      return sharpe_series
+      return returns
 
     
     
+
+
 
 
 
